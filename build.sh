@@ -9,15 +9,17 @@ cd sqlite
 cargo update --aggressive
 marine build --release
 
-cd ../game
-cargo update --aggressive
-marine build --release
+# cd ../game
+# cargo update --aggressive
+# marine build --release
 
 cd ..
 mkdir -p artifacts
 rm -f artifacts/*.wasm
 cp target/wasm32-wasi/release/lefish_sqlite.wasm artifacts/
-cp target/wasm32-wasi/release/lefish_game.wasm artifacts/
-marine aqua artifacts/fdb_facade.wasm -s Fdb -i fdb > ../aqua/aqua/fdb.aqua
+# cp target/wasm32-wasi/release/lefish_game.wasm artifacts/
+# marine aqua artifacts/fdb_facade.wasm -s Fdb -i fdb > ../aqua/aqua/fdb.aqua
+wget https://github.com/fluencelabs/sqlite/releases/download/v0.15.0_w/sqlite3.wasm
+mv sqlite3.wasm artifacts/
 
 RUST_LOG="info" mrepl --quiet Config.toml
