@@ -1,11 +1,11 @@
 [package]
-name = "lefish_game"
+name = "game"
 version = "0.1.0"
 edition = "2021"
 publish = false
 
 [[bin]]
-name = "lefish_game"
+name = "game"
 path = "src/main.rs"
 
 [dependencies]

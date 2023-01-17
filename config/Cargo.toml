@@ -1,11 +1,11 @@
 [package]
-name = "lefish_sqlite"
+name = "configuration"
 version = "0.1.0"
 edition = "2021"
 publish = false
 
 [[bin]]
-name = "lefish_sqlite"
+name = "config_file"
 path = "src/main.rs"
 
 [dependencies]

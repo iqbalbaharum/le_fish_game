@@ -10,7 +10,7 @@ use marine_sqlite_connector::{Connection, Error, Result, Value};
 
 module_manifest!();
 
-const DEFAULT_PATH: &str = "config_local";
+const DEFAULT_PATH: &str = "lefish_config";
 
 pub fn main() {
     WasmLoggerBuilder::new()
@@ -22,19 +22,15 @@ pub fn main() {
 #[marine]
 pub fn init_config() -> LeFishResult {
     let conn = get_connection(DEFAULT_PATH);
-    let res = create_config_table(&conn);
+    let res = create_tables(&conn);
     LeFishResult::from_res(res)
 }
 
 #[marine]
-pub fn insert(
-    key: String,
-    value: String,
-) -> LeFishResult {
-
+pub fn add(key: String, value: String) -> LeFishResult {
     let conn = get_connection(DEFAULT_PATH);
 
-    // Check if PK and key exist
+    // Check if key exist
     match get_record_by_key(&conn, key.clone()) {
         Ok(result) => {
             if result.is_none() {
@@ -50,21 +46,17 @@ pub fn insert(
 }
 
 #[marine]
-pub fn get_records_by_key(key: String) -> Vec<String> {
+pub fn get_value_by_key(key: String) -> String {
     let conn = get_connection(DEFAULT_PATH);
-    let records = get_records(&conn, key).unwrap();
+    let record = get_record_by_key(&conn, key).unwrap();
 
-    log::info!("{:?}", records);
+    log::info!("{:?}", record);
 
-    let mut result = Vec::new();
-
-    for record in records.iter() {
-        match record {
-            _ => result.push(record.key.clone()),
-        }
+    if record != None {
+        record.unwrap().value
+    } else {
+        "".to_string()
     }
-
-    result
 }
 
 /************************ *********************/
@@ -81,12 +73,12 @@ pub fn get_connection(db_name: &str) -> Connection {
     Connection::open(&path).unwrap()
 }
 
-pub fn create_config_table(conn: &Connection) -> Result<()> {
+pub fn create_tables(conn: &Connection) -> Result<()> {
     conn.execute(
         "
     create table if not exists config (
             uuid INTEGER not null primary key AUTOINCREMENT,
-            key TEXT not null,
+            key TEXT not null unique,
             value TEXT not null
         );
     ",
@@ -95,11 +87,11 @@ pub fn create_config_table(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
-pub fn delete_config_table(conn: &Connection) -> Result<()> {
+pub fn delete_tables(conn: &Connection) -> Result<()> {
     conn.execute(
         "
-  drop table if exists config;
-  ",
+        drop table if exists config;
+        ",
     )?;
 
     Ok(())
@@ -133,37 +125,12 @@ pub fn update_record(conn: &Connection, key: String, value: String) -> Result<()
 }
 
 pub fn get_exact_record(conn: &Connection, key: String) -> Result<Record> {
-    read_execute(
-        conn,
-        format!(
-            "select * from config where key = '{}';",
-            key
-        ),
-    )
+    read_execute(conn, format!("select * from config where key = '{}';", key))
 }
 
-pub fn get_records(conn: &Connection, key: String) -> Result<Vec<Record>> {
+pub fn get_record_by_key(conn: &Connection, key: String) -> Result<Option<Record>> {
     let mut cursor = conn
         .prepare(format!("select * from config where key = '{}';", key))?
-        .cursor();
-
-    let mut records = Vec::new();
-    while let Some(row) = cursor.next()? {
-        records.push(Record::from_row(row)?);
-    }
-
-    Ok(records)
-}
-
-pub fn get_record_by_key(
-    conn: &Connection,
-    key: String,
-) -> Result<Option<Record>> {
-    let mut cursor = conn
-        .prepare(format!(
-            "select * from config where key = '{}';",
-            key
-        ))?
         .cursor();
 
     let row = cursor.next()?;
@@ -218,4 +185,3 @@ impl Record {
         }
     }
 }
-

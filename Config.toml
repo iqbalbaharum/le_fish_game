@@ -8,12 +8,12 @@ modules_dir = "artifacts/"
     mapped_dirs = { "tmp" = "/tmp" }
     
 [[module]]
-    name = "lefish_sqlite"
+    name = "config_file"
     mem_pages_count = 100
     logger_enabled = true
 
 [[module]]
-    name = "lefish_game"
+    name = "game"
     mem_pages_count = 100
     logger_enabled = true
 
