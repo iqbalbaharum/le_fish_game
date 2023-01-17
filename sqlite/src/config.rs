@@ -20,17 +20,17 @@ pub fn main() {
 }
 
 #[marine]
-pub fn init_config() -> FdbResult {
+pub fn init_config() -> LeFishResult {
     let conn = get_connection(DEFAULT_PATH);
     let res = create_config_table(&conn);
-    FdbResult::from_res(res)
+    LeFishResult::from_res(res)
 }
 
 #[marine]
 pub fn insert(
     key: String,
     value: String,
-) -> FdbResult {
+) -> LeFishResult {
 
     let conn = get_connection(DEFAULT_PATH);
 
@@ -39,13 +39,13 @@ pub fn insert(
         Ok(result) => {
             if result.is_none() {
                 let res = add_record(&conn, key, value);
-                FdbResult::from_res(res)
+                LeFishResult::from_res(res)
             } else {
                 let res = update_record(&conn, key, value);
-                FdbResult::from_res(res)
+                LeFishResult::from_res(res)
             }
         }
-        Err(err) => FdbResult::from_err_str(&err.message.unwrap()),
+        Err(err) => LeFishResult::from_err_str(&err.message.unwrap()),
     }
 }
 

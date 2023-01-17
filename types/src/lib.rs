@@ -1,3 +1,3 @@
 mod result;
 
-pub use result::FdbResult;
+pub use result::LeFishResult;
