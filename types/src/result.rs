@@ -1,6 +1,6 @@
 use marine_rs_sdk::marine;
 use marine_sqlite_connector::Result;
-//
+
 #[marine]
 pub struct LeFishResult {
     pub success: bool,

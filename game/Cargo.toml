@@ -13,3 +13,8 @@ marine-rs-sdk ={ version = "0.7.0", features = ["logger"] }
 log = "0.4.8"
 serde = "1.0.151"
 serde_json = "1.0.64"
+strum = "0.24"
+strum_macros = "0.24"
+rand = "0.8"
+
+types = { path = "../types" }

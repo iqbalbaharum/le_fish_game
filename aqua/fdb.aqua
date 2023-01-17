@@ -1,0 +1,33 @@
+module Fdb declares *
+
+data FdbDht:
+  public_key: string
+  cid: string
+  key: string
+
+data FdbGetResult:
+  success: bool
+  error: string
+  data: string
+
+data FdbGetResults:
+  success: bool
+  error: string
+  datas: []FdbDht
+
+data FdbKeyPair:
+  pk: string
+  sk: string
+
+data FdbResult:
+  success: bool
+  err_msg: string
+
+service Fdb:
+  add(key: string, data: string, public_key: string, signature: string) -> FdbResult
+  am_i_owner() -> bool
+  generate_new_keypair() -> FdbKeyPair
+  get_cids_from_dht(key: string) -> FdbGetResults
+  get_datasets(key: string) -> []string
+  init_service() -> FdbResult
+  ipfs_dag_get(cid: string) -> FdbGetResult

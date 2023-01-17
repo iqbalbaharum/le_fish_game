@@ -1,4 +1,13 @@
 module LefishGame declares *
 
+data Mint:
+  id: string
+  to: string
+  block_no: string
+
 service LefishGame("lefish"):
-  process_latest_block(address: string)  
+  battle()  
+  decay()  
+  feed()  
+  get_latest_mint(uri: string) -> []Mint
+  mint() -> string
