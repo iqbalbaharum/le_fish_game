@@ -111,12 +111,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "game"
-version = "0.1.0"
+name = "eyre"
+version = "0.6.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c2b6b5a29c02cdc822728b7d7b8ae1bab3e3b05d44522770ddd49722eeac7eb"
 dependencies = [
- "log",
- "marine-rs-sdk",
- "serde_json",
+ "indenter",
+ "once_cell",
 ]
 
 [[package]]
@@ -144,6 +145,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "indenter"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce23b50ad8242c51a442f3ff322d56b02f08852c77e4c0b4d3fd684abc89c683"
+
+[[package]]
 name = "itoa"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -156,6 +163,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49409df3e3bf0856b916e2ceaca09ee28e6871cf7d9ce97a692cacfdb2a25a47"
 dependencies = [
  "wasm-bindgen",
+]
+
+[[package]]
+name = "lefish_game"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "marine-rs-sdk",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "lefish_sqlite"
+version = "0.1.0"
+dependencies = [
+ "eyre",
+ "log",
+ "marine-rs-sdk",
+ "marine-sqlite-connector",
+ "serde_json",
+ "types",
 ]
 
 [[package]]
@@ -226,6 +255,15 @@ checksum = "c43e6eac611bc5b96e80a3f3e2621eeded69fb56389aa83b6ea76ec0f243ef23"
 dependencies = [
  "log",
  "serde",
+]
+
+[[package]]
+name = "marine-sqlite-connector"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "446079866e6acd00fd5fbaab2edb62ee518144b071ea0a3eaf735c8c225021fc"
+dependencies = [
+ "marine-rs-sdk",
 ]
 
 [[package]]
@@ -336,10 +374,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sqlite"
-version = "0.1.0"
-
-[[package]]
 name = "syn"
 version = "1.0.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -368,6 +402,15 @@ dependencies = [
  "libc",
  "wasi",
  "winapi",
+]
+
+[[package]]
+name = "types"
+version = "0.1.0"
+dependencies = [
+ "eyre",
+ "marine-rs-sdk",
+ "marine-sqlite-connector",
 ]
 
 [[package]]

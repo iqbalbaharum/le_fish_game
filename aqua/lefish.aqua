@@ -1,0 +1,4 @@
+module LefishGame declares *
+
+service LefishGame("lefish"):
+  process_latest_block(address: string)  

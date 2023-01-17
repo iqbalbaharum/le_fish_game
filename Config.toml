@@ -1,6 +1,13 @@
 modules_dir = "artifacts/"
 
 [[module]]
+    name = "sqlite3"
+
+    [module.wasi]
+    preopened_files = ["/tmp"]
+    mapped_dirs = { "tmp" = "/tmp" }
+    
+[[module]]
     name = "lefish_sqlite"
     mem_pages_count = 100
     logger_enabled = true
@@ -11,4 +18,5 @@ modules_dir = "artifacts/"
     logger_enabled = true
 
     [module.mounted_binaries]
-    curl = "/bin/bash/curl"
+    curl = "/usr/bin/curl"
+
