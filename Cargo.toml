@@ -1,4 +1,5 @@
 [workspace]
 members = [
-  "sqlite"
+  "sqlite",
+  "game"
 ]
