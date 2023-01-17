@@ -8,6 +8,12 @@ use serde_json::json;
 
 module_manifest!();
 
+pub struct Mint{
+    id: String
+    to: String
+    blockNo: String
+}
+
 pub fn main() {
     WasmLoggerBuilder::new().build().unwrap();
 }
@@ -47,8 +53,12 @@ pub fn process_latest_block(address: String) {
     ];
 
     let response = curl(args);
-    // convert to string - String::from_utf8(response.stdout)?;
-    // convert to json - serde_json::from_str();
+    let curl_string = String::from_utf8(response.stdout)?;
+    let curl_json:Mint = serde_json::from_str(curl_string).unwrap();
+    
+    for(key, value) in curl_json.as_object().unwrap().iter() {
+        
+    }
 }
 
 #[marine]

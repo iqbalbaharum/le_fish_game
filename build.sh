@@ -16,7 +16,7 @@ marine build --release
 cd ..
 mkdir -p artifacts
 rm -f artifacts/*.wasm
-cp target/wasm32-wasi/release/lefish_sqlite.wasm artifacts/
+# cp target/wasm32-wasi/release/lefish_sqlite.wasm artifacts/
 cp target/wasm32-wasi/release/lefish_game.wasm artifacts/
 marine aqua artifacts/fdb_facade.wasm -s Fdb -i fdb > ../aqua/aqua/fdb.aqua
 
