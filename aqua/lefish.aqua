@@ -1,4 +1,8 @@
 module LefishGame declares *
 
 service LefishGame("lefish"):
+  battle_fish(fish1: string, fish2: string)  
+  decay_fish(fish: string)  
+  feed_fish(source: string, food: string)  
+  generate_fish()  
   process_latest_block(address: string)  

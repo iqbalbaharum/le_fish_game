@@ -13,3 +13,4 @@ marine-rs-sdk ={ version = "0.7.0", features = ["logger"] }
 log = "0.4.8"
 serde = "1.0.151"
 serde_json = "1.0.64"
+rand = "0.8.5"
