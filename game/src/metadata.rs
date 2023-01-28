@@ -7,6 +7,10 @@ use strum_macros::Display;
 pub struct LFMetadata {
     pub status: String,
     pub power: i32,
+    pub timestamp: u64,
+    pub total_battle: u64,
+    pub total_feed: u64,
+    pub total_decay: u64,
 }
 
 #[marine]
@@ -15,6 +19,13 @@ pub struct Mint {
     id: String,
     to: String,
     block_no: String,
+}
+
+#[marine]
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PvPBattleOutcome {
+    pub fish1: String,
+    pub fish2: String,
 }
 
 #[derive(Display, Debug, Clone, Copy)]

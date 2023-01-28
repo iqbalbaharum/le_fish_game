@@ -5,12 +5,12 @@ data FdbDht:
   cid: string
   key: string
 
-data FdbGetResult:
+data DhtGetResult:
   success: bool
   error: string
-  data: string
+  data: FdbDht
 
-data FdbGetResults:
+data DhtsGetResult:
   success: bool
   error: string
   datas: []FdbDht
@@ -23,11 +23,17 @@ data FdbResult:
   success: bool
   err_msg: string
 
+data IpfsGetResult:
+  success: bool
+  error: string
+  data: string
+
 service Fdb:
   add(key: string, data: string, public_key: string, signature: string) -> FdbResult
   am_i_owner() -> bool
   generate_new_keypair() -> FdbKeyPair
-  get_cids_from_dht(key: string) -> FdbGetResults
+  get_cids_from_dht(key: string) -> DhtsGetResult
   get_datasets(key: string) -> []string
+  get_latest_data(key: string, pk: string) -> DhtGetResult
   init_service() -> FdbResult
-  ipfs_dag_get(cid: string) -> FdbGetResult
+  ipfs_dag_get(cid: string) -> IpfsGetResult

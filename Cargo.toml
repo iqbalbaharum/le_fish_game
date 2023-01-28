@@ -1,7 +1,6 @@
 [workspace]
 members = [
   "config",
-  "tx_sign",
   "game",
   "types"
 ]

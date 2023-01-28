@@ -1,0 +1,15 @@
+module IpfsDag declares *
+
+data IpfsDagGetResult:
+  success: bool
+  error: string
+  content: string
+
+data IpfsDagPutResult:
+  success: bool
+  error: string
+  cid: string
+
+service IpfsDag("IpfsDag"):
+  get(hash: string, api_multiaddr: string, timeout_sec: u64) -> IpfsDagGetResult
+  put(object: string, api_multiaddr: string, timeout_sec: u64) -> IpfsDagPutResult

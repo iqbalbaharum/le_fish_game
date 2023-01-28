@@ -7,3 +7,5 @@ target
 
 # DS_STORE
 .DS_STORE
+
+aqua/node_modules

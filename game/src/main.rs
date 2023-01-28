@@ -2,29 +2,32 @@
 
 mod metadata;
 
+use chrono::{TimeZone, Utc};
 use marine_rs_sdk::marine;
 use marine_rs_sdk::module_manifest;
 use marine_rs_sdk::MountedBinaryResult;
 use marine_rs_sdk::WasmLoggerBuilder;
 use metadata::FishStatus;
 use metadata::LFMetadata;
-use metadata::Mint;
+use metadata::{Mint, PvPBattleOutcome};
 use rand::Rng;
 use serde_json::json;
+
+use std::time::{SystemTime, UNIX_EPOCH};
 
 module_manifest!();
 
 // configuration
 const LAST_MINT_BLOCK: &str = "last_mint_block";
 const LAST_FEED_BLOCK: &str = "last_feed_block";
-const LAST_BATTLE_BLOCK: &str = "last_battle_block";
+const MARGIN_BATTLE_PERCENTAGE: f32 = 0.2;
 
 pub fn main() {
     WasmLoggerBuilder::new().build().unwrap();
 }
 
 #[marine]
-pub fn get_latest_mint(uri: String) -> Vec<Mint> {
+pub fn get_latest_mint_event(uri: String) -> Vec<Mint> {
     // get lastest block
     let mut last_block = 0;
 
@@ -50,7 +53,7 @@ pub fn get_latest_mint(uri: String) -> Vec<Mint> {
         blockNo
     }}
     }}"#,
-        last_block
+        last_block as u64
     );
 
     let query_json = json!({ "query": query });
@@ -83,10 +86,24 @@ pub fn get_latest_mint(uri: String) -> Vec<Mint> {
 }
 
 #[marine]
-pub fn mint() -> String {
+pub fn get_initial_fish_power() -> i32 {
+    rand::thread_rng().gen_range(1..10)
+}
+
+#[marine]
+pub fn stringify_i32(number: i32) -> String {
+    number.to_string()
+}
+
+#[marine]
+pub fn mint(power: i32) -> String {
     let metadata = LFMetadata {
         status: FishStatus::NORMAL.to_string(),
-        power: rand::thread_rng().gen_range(1..10),
+        power,
+        timestamp: get_server_timestamp(),
+        total_feed: 0,
+        total_battle: 0,
+        total_decay: 0,
     };
 
     log::info!("{:?}", metadata);
@@ -95,13 +112,114 @@ pub fn mint() -> String {
 }
 
 #[marine]
-pub fn battle() {}
+pub fn battle(fish1_metadata: String, fish2_metadata: String) -> PvPBattleOutcome {
+    let mut fish1_json: LFMetadata = serde_json::from_str(fish1_metadata.as_ref()).unwrap();
+    let mut fish2_json: LFMetadata = serde_json::from_str(fish2_metadata.as_ref()).unwrap();
+
+    let fish_1_bp = fish1_json.power;
+    let fish_2_bp = fish2_json.power;
+
+    if fish1_json.power > fish2_json.power {
+        fish1_json.power = fish1_json.power
+            + ((fish_2_bp.clone() as f32 * MARGIN_BATTLE_PERCENTAGE).ceil() as i32);
+        fish2_json.power = fish2_json.power
+            - ((fish_1_bp.clone() as f32 * MARGIN_BATTLE_PERCENTAGE).ceil() as i32);
+
+        if fish2_json.power <= 0 {
+            fish2_json.power = 1
+        }
+    } else {
+        fish2_json.power = fish2_json.power
+            + ((fish_1_bp.clone() as f32 * MARGIN_BATTLE_PERCENTAGE).ceil() as i32);
+        fish1_json.power = fish1_json.power
+            - ((fish_2_bp.clone() as f32 * MARGIN_BATTLE_PERCENTAGE).ceil() as i32);
+
+        if fish1_json.power <= 0 {
+            fish1_json.power = 1
+        }
+    }
+
+    fish1_json.total_battle = fish1_json.total_battle + 1;
+    fish1_json.timestamp = get_server_timestamp();
+    fish2_json.timestamp = get_server_timestamp();
+
+    let fish1_new_json = serde_json::to_string(&fish1_json).unwrap();
+
+    let fish2_new_json = serde_json::to_string(&fish2_json).unwrap();
+
+    log::info!("fish 1 {:?}", fish1_new_json);
+    log::info!("fish 2 {:?}", fish2_new_json);
+
+    PvPBattleOutcome {
+        fish1: fish1_new_json,
+        fish2: fish2_new_json,
+    }
+}
 
 #[marine]
-pub fn feed() {}
+pub fn feed(source_metadata: String, food_metadata: String) -> String {
+    let mut source_json: LFMetadata =
+        serde_json::from_str(source_metadata.as_ref()).unwrap_or(LFMetadata {
+            status: FishStatus::NORMAL.to_string(),
+            power: 0,
+            timestamp: get_server_timestamp(),
+            total_feed: 0,
+            total_battle: 0,
+            total_decay: 0,
+        });
+
+    let food_json: LFMetadata =
+        serde_json::from_str(food_metadata.as_ref()).unwrap_or(LFMetadata {
+            status: FishStatus::NORMAL.to_string(),
+            power: 0,
+            timestamp: get_server_timestamp(),
+            total_feed: 0,
+            total_battle: 0,
+            total_decay: 0,
+        });
+
+    source_json.power = source_json.power + food_json.power;
+    source_json.total_feed = source_json.total_feed + 1;
+
+    let source_new_json = serde_json::to_string(&source_json).unwrap();
+
+    log::info!("{:?}", source_new_json);
+
+    source_new_json
+}
 
 #[marine]
-pub fn decay() {}
+pub fn decay(fish_metadata: String) -> String {
+    let mut fish_json: LFMetadata = serde_json::from_str(fish_metadata.as_ref()).unwrap();
+
+    if fish_json.status == FishStatus::DECAY.to_string() {
+        if (get_server_timestamp() - fish_json.timestamp) > 86400000 && fish_json.power > 1 {
+            fish_json.power = fish_json.power - 1;
+            fish_json.timestamp = get_server_timestamp();
+        }
+    } else {
+        if (get_server_timestamp() - fish_json.timestamp) > 172800000 {
+            fish_json.status = FishStatus::DECAY.to_string();
+            fish_json.timestamp = get_server_timestamp();
+            fish_json.total_decay = fish_json.total_decay + 1;
+        }
+    }
+
+    let fish_new_json = serde_json::to_string(&fish_json).unwrap();
+
+    log::info!("Fish new metadata {:?}", fish_new_json);
+
+    fish_new_json
+}
+
+fn get_server_timestamp() -> u64 {
+    let start = SystemTime::now();
+    let since_the_epoch = start
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards");
+
+    since_the_epoch.as_millis() as u64
+}
 
 #[marine]
 #[link(wasm_import_module = "host")]

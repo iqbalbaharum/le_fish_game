@@ -1,0 +1,8 @@
+module Ed25519 declares *
+
+data Ed25519KeyPair:
+  pk: string
+  sk: string
+
+service Ed25519:
+  sign(message: string, private_key: string) -> string

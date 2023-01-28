@@ -1,0 +1,12 @@
+module BlockFormatter declares *
+
+data Block:
+  timestamp: u64
+  name: string
+  content: string
+  previous: string
+
+service BlockFormatter:
+  deserialize(json: string) -> Block
+  format(format_type: string, blocks: []Block) -> string
+  serialize(name: string, content: string, previous_cid: string) -> string

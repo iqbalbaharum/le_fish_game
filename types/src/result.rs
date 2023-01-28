@@ -1,28 +1,28 @@
 use marine_rs_sdk::marine;
 use marine_sqlite_connector::Result;
-
+//
 #[marine]
-pub struct LeFishResult {
+pub struct ConfigResult {
     pub success: bool,
     pub err_msg: String,
 }
 
-impl LeFishResult {
-    pub fn from_res(res: Result<()>) -> LeFishResult {
+impl ConfigResult {
+    pub fn from_res(res: Result<()>) -> ConfigResult {
         match res {
-            Ok(_v) => LeFishResult {
+            Ok(_v) => ConfigResult {
                 success: true,
                 err_msg: "".into(),
             },
-            Err(e) => LeFishResult {
+            Err(e) => ConfigResult {
                 success: false,
                 err_msg: e.to_string(),
             },
         }
     }
 
-    pub fn from_err_str(e: &str) -> LeFishResult {
-        LeFishResult {
+    pub fn from_err_str(e: &str) -> ConfigResult {
+        ConfigResult {
             success: false,
             err_msg: e.to_string(),
         }

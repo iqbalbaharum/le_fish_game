@@ -1,3 +1,3 @@
 mod result;
 
-pub use result::LeFishResult;
+pub use result::ConfigResult;

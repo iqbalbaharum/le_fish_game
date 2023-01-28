@@ -20,14 +20,14 @@ pub fn main() {
 }
 
 #[marine]
-pub fn init_config() -> LeFishResult {
+pub fn init_config() -> ConfigResult {
     let conn = get_connection(DEFAULT_PATH);
     let res = create_tables(&conn);
-    LeFishResult::from_res(res)
+    ConfigResult::from_res(res)
 }
 
 #[marine]
-pub fn add(key: String, value: String) -> LeFishResult {
+pub fn add(key: String, value: String) -> ConfigResult {
     let conn = get_connection(DEFAULT_PATH);
 
     // Check if key exist
@@ -35,13 +35,13 @@ pub fn add(key: String, value: String) -> LeFishResult {
         Ok(result) => {
             if result.is_none() {
                 let res = add_record(&conn, key, value);
-                LeFishResult::from_res(res)
+                ConfigResult::from_res(res)
             } else {
                 let res = update_record(&conn, key, value);
-                LeFishResult::from_res(res)
+                ConfigResult::from_res(res)
             }
         }
-        Err(err) => LeFishResult::from_err_str(&err.message.unwrap()),
+        Err(err) => ConfigResult::from_err_str(&err.message.unwrap()),
     }
 }
 

@@ -1,0 +1,147 @@
+import "./lefish.aqua"
+import "./fdb.aqua"
+import "./ipfs_dag.aqua"
+import "./ed25519.aqua"
+import "./dht.aqua"
+import "./block.aqua"
+import "@fluencelabs/aqua-lib/builtin.aqua"
+
+const PEER ?= "12D3KooWPBWYscDWmRwLChgpTZLS7u8KndXiMHubVVfsGqRW6Kn9"
+const RELAY ?= "12D3KooWSD5PToNiLQwKDXsu8JSysCwUt8BVUJEqCHcDe7P5h45e"
+
+const GAME_SERVICE_PEER ?= "12D3KooWR2Fcs8KLsrNhULeUgn9d9totR14FEnaVqJZC7ESrRfZA"
+const LEFISH_SERVICE_ID ?= "lefish"
+const DHT_SERVICE_ID ?= "cf758341-46ab-4ac5-ba1a-c0c505e4f746"
+const IPFS_DAG_SERVICE_ID ?= "ec2a821d-84cb-451a-8940-6902bc14299a"
+const ED25519_SERVICE_ID ?= "ae820aba-62fb-426f-b66f-caa1c612dc50"
+const BLOCK_FORMATTER_SERVICE_ID ?= ""
+
+const MINT_URI ?= "https://api.thegraph.com/subgraphs/name/saifiikmal/dosasubgraph"
+
+const FIELD_IMAGE_PK ?= "LOvsYSZgm5VUAgYtkcjs0w+r6OtUzJickjwppF/IoXU="
+const FIELD_IMAGE_SK ?= "jRT+jBHO16v2OqA+sUsgBKo5ISj3LCbowPaWSu91NMcs6+xhJmCblVQCBi2RyOzTD6vo61TMmJySPCmkX8ihdQ=="
+
+const FIELD_EXTERNAL_LINK_PK ?= "ecRkSLHwBvTv11gYXuPZ3uF/HjRHvCCszFPLRXyDZ1E="
+const FIELD_EXTERNAL_LINK_SK ?= "31TgzEkmlGn4ATCim60tEAS9yeIdTOuGpVn4dsHd5kF5xGRIsfAG9O/XWBhe49ne4X8eNEe8IKzMU8tFfINnUQ=="
+
+const FIELD_DESCRIPTION_PK ?= "Klq6rvt93AWxIKxpVFgvmGTQQ/O5DvqNW+TGy5ZStXs="
+const FIELD_DESCRIPTION_SK ?= "2SW0SPM7JRZPzncQrGAWX+L+sFnwIvjyhqpydAiGHg0qWrqu+33cBbEgrGlUWC+YZNBD87kO+o1b5MbLllK1ew=="
+
+const FIELD_NAME_PK ?= "O8hv8chBosdbn3JjXZaceZrDs4q8iWWXg82in0yhmUw="
+const FIELD_NAME_SK ?= "+1V8PviyndL2x3E6GTwNqzcna5psw6/Gf5H4vJCVFOI7yG/xyEGix1ufcmNdlpx5msOziryJZZeDzaKfTKGZTA=="
+
+const FIELD_ATTRIBUTES_PK ?= "pPaxLRhq7KkQw32QU8O2yLNj+UWDC3KRXoBco5A7OPE="
+const FIELD_ATTRIBUTES_SK ?= "I41ennKZcasFoaSFdZyeorA0yENMn09XporaPtUXqxSk9rEtGGrsqRDDfZBTw7bIs2P5RYMLcpFegFyjkDs48Q=="
+
+const FIELD_LEFISH_PK ?= "CdXYaBMORVqdjQ3x54W6K0l9l3f1dlstDjLfk1b1ii0="
+const FIELD_LEFISH_SK ?= "H7HdEg4ENfaTR6watsN0kksPazJO/TFYqeFvonCBvp0J1dhoEw5FWp2NDfHnhborSX2Xd/V2Wy0OMt+TVvWKLQ=="
+
+const TEST_KEY ?= "562915668c8042b74780a5190edea9b105e3493e0fd1855a45265bbbb3aac983"
+const THEGRAPH_URL ?= "https://thegraph.com/studio/subgraph/lefishnft"
+
+func sign_and_insert(key: string, pk: string, sk: string, content: string, name: string):
+  Dht DHT_SERVICE_ID
+  IpfsDag IPFS_DAG_SERVICE_ID
+  Ed25519 ED25519_SERVICE_ID
+  BlockFormatter BLOCK_FORMATTER_SERVICE_ID
+
+  -- Check if there is record of dht
+  fish_dht <- Dht.get_latest_record_by_pk_and_key(key, pk)
+  -- Serialize content
+  Ed25519 ED25519_SERVICE_ID
+  signature <- Ed25519.sign(content, sk)
+  -- push content to ipfs
+  result <- IpfsDag.put(content, "", 0)
+  -- DHT
+  if fish_dht.cid != "":
+    Dht.insert(key, fish_dht.name, result.cid, pk, signature, content)
+  else:
+    Dht.insert(key, name, result.cid, pk, signature, content)
+
+-- func mint_listen():
+--   on PEER via RELAY:
+--     for mint <- LefishGame.get_latest_mint(MINT_URI) par:
+--         metadata <- LefishGame.mint()
+        -- send metadata to fdb
+
+-- cid: string, public_key: string, signature: string, message: string)
+-- Test function
+func mint():
+  on PEER via RELAY:
+    LefishGame LEFISH_SERVICE_ID
+
+    for mint <- LefishGame.get_latest_mint_event(THEGRAPH_URL) par:
+      power <- LefishGame.get_initial_fish_power()
+      power_string <- LefishGame.stringify_i32(power)
+      content <- LefishGame.mint(power)
+
+      IpfsDag IPFS_DAG_SERVICE_ID
+      result <- IpfsDag.put(content, "", 0)
+
+      Ed25519 ED25519_SERVICE_ID
+
+      Dht DHT_SERVICE_ID
+      -- name key: string, pk: string, sk: string, content: string, name: string
+      signature <- Ed25519.sign("Fish", FIELD_IMAGE_SK)
+      sign_and_insert(TEST_KEY, FIELD_IMAGE_PK, FIELD_IMAGE_SK, Op.concat_strings("Fish #", mint.id), "name")
+      -- image
+      sign_and_insert(TEST_KEY, FIELD_IMAGE_PK, FIELD_IMAGE_SK, "ipfs://", "image")
+      -- external_link
+      sign_and_insert(TEST_KEY, FIELD_EXTERNAL_LINK_PK, FIELD_EXTERNAL_LINK_SK, "https://", "external_link")
+      -- description
+      sign_and_insert(TEST_KEY, FIELD_DESCRIPTION_PK, FIELD_DESCRIPTION_SK, "This is a description", "description")
+      -- attributes
+  
+
+-- func feed(fish_1_key: string, fish_2_key: string) -> string:
+--   on PEER via RELAY:
+--     Dht DHT_SERVICE_ID
+--     LefishGame LEFISH_SERVICE_ID
+--     -- Get latest cid
+--     fish_1_dht <- Dht.get_latest_record_by_pk_and_key(fish_1_key, TABLE_PK)
+--     fish_2_dht <- Dht.get_latest_record_by_pk_and_key(fish_2_key, TABLE_PK)
+--     -- Get metadata
+--     IpfsDag IPFS_DAG_SERVICE_ID
+--     fish_1_metadata <- IpfsDag.get(fish_1_dht.cid, "", 0)
+--     fish_2_metadata <- IpfsDag.get(fish_2_dht.cid, "", 0)
+--     new_metadata <- LefishGame.feed(fish_1_metadata.content, fish_2_metadata.content)
+--     -- Update metadata to Ipfs
+--     result <- IpfsDag.put(new_metadata, "", 0)
+--     -- add(key: string, data: string, public_key: string, signature: string) -> FdbResult
+--     Ed25519 ED25519_SERVICE_ID
+--     signature <- Ed25519.sign(new_metadata, TABLE_SK)
+--     Dht.insert(fish_1_key, fish_1_dht.name, result.cid, TABLE_PK, signature, new_metadata)
+--   <- new_metadata
+
+-- func battle(fish_1_key: string, fish_2_key: string) -> string, string:
+--   on PEER via RELAY:
+--     Dht DHT_SERVICE_ID
+--     LefishGame LEFISH_SERVICE_ID
+    
+--     -- Get latest cid
+--     fish_1_dht <- Dht.get_latest_record_by_pk_and_key(fish_1_key, TABLE_PK)
+--     fish_2_dht <- Dht.get_latest_record_by_pk_and_key(fish_2_key, TABLE_PK)
+--     -- Get metadata
+--     IpfsDag IPFS_DAG_SERVICE_ID
+--     fish_1_metadata <- IpfsDag.get(fish_1_dht.cid, "", 0)
+--     fish_2_metadata <- IpfsDag.get(fish_2_dht.cid, "", 0)
+--     outcome <- LefishGame.battle(fish_1_metadata.content, fish_2_metadata.content)
+--     Ed25519 ED25519_SERVICE_ID
+--     -- Formatter
+--     BlockFormatter BLOCK_FORMATTER_SERVICE_ID
+--     formatted_1_fish = BlockFormatter.serialize(fish_1_dht.name, outcome.fish1, fish_1_key)
+--     formatted_2_fish = BlockFormatter.serialize(fish_2_dht.name, outcome.fish2, fish_2_key)
+--     -- Ipfs
+--     fish_1_result <- IpfsDag.put(outcome.fish1, "", 0)
+--     fish_2_result <- IpfsDag.put(outcome.fish2, "", 0)
+--     -- fish1
+--     fish_1_signature <- Ed25519.sign(outcome.fish1, TABLE_SK)
+--     Dht.insert(fish_1_key, fish_1_dht.name, fish_1_result.cid, TABLE_PK, fish_1_signature, outcome.fish1)
+--     -- fish2
+--     fish_2_signature <- Ed25519.sign(outcome.fish2, TABLE_SK)
+--     Dht.insert(fish_2_key, fish_1_dht.name, fish_1_result.cid, TABLE_PK, fish_2_signature, outcome.fish2)
+    
+--   <- outcome.fish1, outcome.fish2
+  
+
+

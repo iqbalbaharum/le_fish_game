@@ -5,9 +5,15 @@ data Mint:
   to: string
   block_no: string
 
+data PvPBattleOutcome:
+  fish1: string
+  fish2: string
+
 service LefishGame("lefish"):
-  battle()  
-  decay()  
-  feed()  
-  get_latest_mint(uri: string) -> []Mint
-  mint() -> string
+  battle(fish1_metadata: string, fish2_metadata: string) -> PvPBattleOutcome
+  decay(fish_metadata: string) -> string
+  feed(source_metadata: string, food_metadata: string) -> string
+  get_initial_fish_power() -> i32
+  get_latest_mint_event(uri: string) -> []Mint
+  mint(power: i32) -> string
+  stringify_i32(number: i32) -> string

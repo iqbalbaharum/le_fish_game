@@ -13,11 +13,6 @@ modules_dir = "artifacts/"
     logger_enabled = true
 
 [[module]]
-    name = "tx_sign"
-    mem_pages_count = 100
-    logger_enabled = true
-
-[[module]]
     name = "game"
     mem_pages_count = 100
     logger_enabled = true
