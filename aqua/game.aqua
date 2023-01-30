@@ -4,17 +4,22 @@ import "./ipfs_dag.aqua"
 import "./ed25519.aqua"
 import "./dht.aqua"
 import "./block.aqua"
+import "./fevm_rpc.aqua"
 import "@fluencelabs/aqua-lib/builtin.aqua"
 
-const PEER ?= "12D3KooWPBWYscDWmRwLChgpTZLS7u8KndXiMHubVVfsGqRW6Kn9"
-const RELAY ?= "12D3KooWSD5PToNiLQwKDXsu8JSysCwUt8BVUJEqCHcDe7P5h45e"
+-- const PEER ?= "12D3KooWPPouYHdgX8zz5U8SPvviyetwW3MV9n7EDb2DtHpxs8pK"
+const PEER = "12D3KooWHBG9oaVx4i3vi6c1rSBUm7MLBmyGmmbHoZ23pmjDCnvK"
 
 const GAME_SERVICE_PEER ?= "12D3KooWR2Fcs8KLsrNhULeUgn9d9totR14FEnaVqJZC7ESrRfZA"
+
 const LEFISH_SERVICE_ID ?= "lefish"
 const DHT_SERVICE_ID ?= "cf758341-46ab-4ac5-ba1a-c0c505e4f746"
 const IPFS_DAG_SERVICE_ID ?= "ec2a821d-84cb-451a-8940-6902bc14299a"
 const ED25519_SERVICE_ID ?= "ae820aba-62fb-426f-b66f-caa1c612dc50"
 const BLOCK_FORMATTER_SERVICE_ID ?= ""
+const FEVM_RPC_SERVICE_ID = "4f6dac9a-b4b3-4566-8e8a-2c31b1047a05"
+
+const NFT_CONTRACT = "0xf15De5667BdC2c6e396C868f9e122733D844E51D"
 
 const MINT_URI ?= "https://api.thegraph.com/subgraphs/name/saifiikmal/dosasubgraph"
 
@@ -37,8 +42,13 @@ const FIELD_LEFISH_PK ?= "CdXYaBMORVqdjQ3x54W6K0l9l3f1dlstDjLfk1b1ii0="
 const FIELD_LEFISH_SK ?= "H7HdEg4ENfaTR6watsN0kksPazJO/TFYqeFvonCBvp0J1dhoEw5FWp2NDfHnhborSX2Xd/V2Wy0OMt+TVvWKLQ=="
 
 const TEST_KEY ?= "562915668c8042b74780a5190edea9b105e3493e0fd1855a45265bbbb3aac983"
-const THEGRAPH_URL ?= "https://thegraph.com/studio/subgraph/lefishnft"
+const NODE_URL = "https://goerli.infura.io/v3/106d9f764d6c4f248257a5a352e50a74"
+const START_BLOCK = 8354574
+const END_BLOCK = 8354576
+const EVENT_MINT = "Minting"
+const ABI_URL = "https://api-goerli.etherscan.io/api?module=contract&action=getabi&address=0xf15De5667BdC2c6e396C868f9e122733D844E51D&format=raw"
 
+-- Sign data and insert to DHT table
 func sign_and_insert(key: string, pk: string, sk: string, content: string, name: string):
   Dht DHT_SERVICE_ID
   IpfsDag IPFS_DAG_SERVICE_ID
@@ -58,38 +68,61 @@ func sign_and_insert(key: string, pk: string, sk: string, content: string, name:
   else:
     Dht.insert(key, name, result.cid, pk, signature, content)
 
--- func mint_listen():
---   on PEER via RELAY:
---     for mint <- LefishGame.get_latest_mint(MINT_URI) par:
---         metadata <- LefishGame.mint()
-        -- send metadata to fdb
 
--- cid: string, public_key: string, signature: string, message: string)
+-- 1. Call eth_getBlockNumber to get the current block number
+    -- 2. Use a loop to repeatedly call eth_getBlockByNumber using increasing block numbers starting from 0, until the current block number
+    -- 3. For each block retrieve the transactions and check if the to or from field matches the smart contract address
+    -- 4. Call eth_getTransactionReceipt to retrieve the transaction receipt, which includes the input 
+    -- data of the transaction (which can be used to determine the function that was called and any associated parameters).
+func mint_listen() -> u64:
+  on PEER:
+    FevmJsonRpc FEVM_RPC_SERVICE_ID
+    latest_block_result <- FevmJsonRpc.eth_get_latest_block_number(NODE_URL)
+    -- convert the block to decimal
+    latest_block <- FevmJsonRpc.hex_to_decimal(latest_block_result.result)
+    <- latest_block
+    -- blocks <- FevmJsonRpc.util_get_list_blocks_range(START_BLOCK, END_BLOCK)
+    -- for block <- blocks:
+    --   block_in_hex <- FevmJsonRpc.decimal_to_hex(block)
+    --   block_result <- FevmJsonRpc.eth_get_block_by_number(NODE_URL, block_in_hex)
+      -- for tx <- block_result.transactions:
+        
+        -- if tx.from != NFT_CONTRACT:
+        --   Op.noop()
+
+        -- if tx.to != NFT_CONTRACT:
+        --   Op.noop()
+
+        -- receipt <- FevmJsonRpc.eth_get_transaction_receipt(NODE_URL, tx.hash)
+        -- for log <- receipt.transaction.logs:
+        --   event_log_result <- FevmJsonRpc.decode_logs(ABI_URL, log.topics, log.data)
+        --   <- event_log_result.event_name
+            
+    
 -- Test function
-func mint():
-  on PEER via RELAY:
-    LefishGame LEFISH_SERVICE_ID
+-- func mint_action():
+--   on PEER via RELAY:
+--     LefishGame LEFISH_SERVICE_ID
+    
+--     for mint <- LefishGame.get_latest_mint_event(THEGRAPH_URL) par:
+--       power <- LefishGame.get_initial_fish_power()
+--       power_string <- LefishGame.stringify_i32(power)
+--       content <- LefishGame.mint(power)
 
-    for mint <- LefishGame.get_latest_mint_event(THEGRAPH_URL) par:
-      power <- LefishGame.get_initial_fish_power()
-      power_string <- LefishGame.stringify_i32(power)
-      content <- LefishGame.mint(power)
+--       IpfsDag IPFS_DAG_SERVICE_ID
+--       result <- IpfsDag.put(content, "", 0)
 
-      IpfsDag IPFS_DAG_SERVICE_ID
-      result <- IpfsDag.put(content, "", 0)
+--       Ed25519 ED25519_SERVICE_ID
 
-      Ed25519 ED25519_SERVICE_ID
-
-      Dht DHT_SERVICE_ID
-      -- name key: string, pk: string, sk: string, content: string, name: string
-      signature <- Ed25519.sign("Fish", FIELD_IMAGE_SK)
-      sign_and_insert(TEST_KEY, FIELD_IMAGE_PK, FIELD_IMAGE_SK, Op.concat_strings("Fish #", mint.id), "name")
-      -- image
-      sign_and_insert(TEST_KEY, FIELD_IMAGE_PK, FIELD_IMAGE_SK, "ipfs://", "image")
-      -- external_link
-      sign_and_insert(TEST_KEY, FIELD_EXTERNAL_LINK_PK, FIELD_EXTERNAL_LINK_SK, "https://", "external_link")
-      -- description
-      sign_and_insert(TEST_KEY, FIELD_DESCRIPTION_PK, FIELD_DESCRIPTION_SK, "This is a description", "description")
+--       Dht DHT_SERVICE_ID
+--       -- name key: string, pk: string, sk: string, content: string, name: string
+--       sign_and_insert(TEST_KEY, FIELD_IMAGE_PK, FIELD_IMAGE_SK, Op.concat_strings("Fish #", mint.id), "name")
+--       -- image
+--       sign_and_insert(TEST_KEY, FIELD_IMAGE_PK, FIELD_IMAGE_SK, "ipfs://", "image")
+--       -- external_link
+--       sign_and_insert(TEST_KEY, FIELD_EXTERNAL_LINK_PK, FIELD_EXTERNAL_LINK_SK, "https://", "external_link")
+--       -- description
+--       sign_and_insert(TEST_KEY, FIELD_DESCRIPTION_PK, FIELD_DESCRIPTION_SK, "This is a description", "description")
       -- attributes
   
 

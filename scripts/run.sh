@@ -1,0 +1,1 @@
+npx aqua run --input ./aqua/game.aqua --func 'mint_listen()' --addr /dns4/fluence.xfero.io/tcp/9990/ws/p2p/12D3KooWHBG9oaVx4i3vi6c1rSBUm7MLBmyGmmbHoZ23pmjDCnvK
