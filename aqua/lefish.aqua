@@ -1,5 +1,9 @@
 module LefishGame declares *
 
+data ConfigResult:
+  success: bool
+  err_msg: string
+
 data Mint:
   id: string
   to: string
@@ -11,6 +15,8 @@ data PvPBattleOutcome:
 
 service LefishGame("lefish"):
   battle(fish1_metadata: string, fish2_metadata: string) -> PvPBattleOutcome
+  config_add(key: string, value: string) -> ConfigResult
+  config_get(key: string) -> string
   decay(fish_metadata: string) -> string
   feed(source_metadata: string, food_metadata: string) -> string
   get_initial_fish_power() -> i32

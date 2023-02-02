@@ -1,0 +1,5 @@
+module Config declares *
+
+service Config:
+  get(key: string) -> string
+  set(key: string, value: string) -> string

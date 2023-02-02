@@ -14,6 +14,7 @@ use rand::Rng;
 use serde_json::json;
 
 use std::time::{SystemTime, UNIX_EPOCH};
+use types::ConfigResult;
 
 module_manifest!();
 
@@ -72,15 +73,8 @@ pub fn get_latest_mint_event(uri: String) -> Vec<Mint> {
     let response = curl(args);
     let curl_string = String::from_utf8(response.stdout).unwrap();
     println!("{:?}", curl_string);
-    // let curl_json = serde_json::from_str(curl_string.as_str()).unwrap();
 
     let mints: Vec<Mint> = Vec::new();
-
-    // println!("{:?}",curl_json);
-
-    // for(key, value) in curl_json().unwrap().iter() {
-
-    // }
 
     mints
 }
@@ -212,6 +206,16 @@ pub fn decay(fish_metadata: String) -> String {
     fish_new_json
 }
 
+#[marine]
+pub fn config_add(key: String, value: String) -> ConfigResult {
+    add(key, value)
+}
+
+#[marine]
+pub fn config_get(key: String) -> String {
+    get_value_by_key(key)
+}
+
 fn get_server_timestamp() -> u64 {
     let start = SystemTime::now();
     let since_the_epoch = start
@@ -230,6 +234,6 @@ extern "C" {
 #[marine]
 #[link(wasm_import_module = "config_file")]
 extern "C" {
-    // fn add(key: String, value: String) -> LeFishResult;
+    fn add(key: String, value: String) -> ConfigResult;
     fn get_value_by_key(key: String) -> String;
 }
